@@ -1,0 +1,4 @@
+[submodule "third_party/neverscript"]
+	path = third_party/neverscript
+	url = https://github.com/violetvandal/NeverScript.git
+	branch = thug2-runtime-safe-recompiler

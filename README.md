@@ -41,12 +41,19 @@ The `verify_*.sh` / `verify_parity.py` scripts are integration harnesses that
 compare against the reference Python/bash pipeline; they expect the surrounding
 project layout (clean game data + `mods/`) and are not needed to build or unit-test.
 
-## Dependency note
+## Dependency
 
-This module currently consumes the patched NeverScript compiler via a local
-`replace github.com/byxor/NeverScript => ../neverscript`. To build standalone it
-needs that fork checked out alongside; this will be converted to a submodule (or
-a pinned module dependency) before the repo goes public.
+The patched NeverScript compiler is vendored as a **git submodule** at
+`third_party/neverscript` (the public fork `github.com/violetvandal/NeverScript`,
+pinned to the `thug2-runtime-safe-recompiler` branch); `go.mod` replaces
+`github.com/byxor/NeverScript` with it. The repo is self-contained — just clone
+with submodules:
+
+```
+git clone --recursive git@github.com:violetvandal/thugkit.git
+# or, after a plain clone:
+git submodule update --init --recursive
+```
 
 ## License
 
