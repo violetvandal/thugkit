@@ -1,0 +1,12 @@
+# compiled binaries (build with: go build ./cmd/thugkit)
+/thugkit
+/thugkit.exe
+*.test
+*.out
+
+# cross-compile / release outputs
+/dist/
+
+# editor / OS noise
+*~
+.DS_Store
