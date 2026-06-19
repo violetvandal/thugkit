@@ -6,10 +6,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/violetvandal/thugkit/apply"
 	"github.com/violetvandal/thugkit/prx"
+	"github.com/violetvandal/thugkit/tag"
 )
 
 func die(format string, a ...any) {
@@ -35,6 +37,8 @@ func main() {
 		cmdPrx(os.Args[2:])
 	case "apply":
 		cmdApply(os.Args[2:])
+	case "tag":
+		cmdTag(os.Args[2:])
 	default:
 		die("unknown command %q", os.Args[1])
 	}
@@ -65,6 +69,66 @@ func cmdApply(args []string) {
 	o.Install = rest[0]
 	if err := apply.Run(o); err != nil {
 		die("%v", err)
+	}
+}
+
+// cmdTag: thugkit tag <image> --gamedir <dir> [--name X] [--slot grap_50]
+//
+//	[--size 64|128|256] [--scale F] [--out dir] [--install]
+func cmdTag(args []string) {
+	o := tag.Options{Slot: "grap_50", Size: 64, Scale: 1.0, OutDir: "out"}
+	var rest []string
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--gamedir":
+			i++
+			o.GameDir = args[i]
+		case "--name":
+			i++
+			o.Name = args[i]
+		case "--slot":
+			i++
+			o.Slot = args[i]
+		case "--size":
+			i++
+			n, err := strconv.Atoi(args[i])
+			if err != nil {
+				die("--size: %v", err)
+			}
+			o.Size = n
+		case "--scale":
+			i++
+			f, err := strconv.ParseFloat(args[i], 32)
+			if err != nil {
+				die("--scale: %v", err)
+			}
+			o.Scale = float32(f)
+		case "--out":
+			i++
+			o.OutDir = args[i]
+		case "--install":
+			o.Install = true
+		default:
+			rest = append(rest, args[i])
+		}
+	}
+	if len(rest) != 1 || o.GameDir == "" {
+		die("usage: thugkit tag <image> --gamedir <dir> [--name X] [--slot grap_50] [--size 64|128|256] [--scale F] [--out dir] [--install]")
+	}
+	o.Image = rest[0]
+	res, err := tag.Run(o)
+	if err != nil {
+		die("%v", err)
+	}
+	fmt.Printf("✓ wrote %s\n✓ wrote %s\n", res.GRF, res.PRX)
+	if o.Install {
+		fmt.Printf("✓ installed sprite -> %s\n", res.InstalledPRX)
+		if res.InstalledGRF != "" {
+			fmt.Printf("✓ installed tag    -> %s\n", res.InstalledGRF)
+		}
+	} else {
+		fmt.Printf("\nInstall (back up first):\n  copy %s -> %s/\n  copy %s -> %s/\n",
+			res.GRF, res.SaveDir, res.PRX, res.PreDir)
 	}
 }
 

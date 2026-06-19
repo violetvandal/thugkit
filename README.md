@@ -16,10 +16,15 @@ it cross-compiles cleanly to Windows, Linux, and Steam Deck.
 - **`apply`** — read a mod set (`mods.list` + per-mod `mod.conf` / `inject.list`)
   and apply it to an install: compile `.ns` → `.qb` in-process and inject into
   the right archive (raw, or LZSS-compressed for the size-capped `qb_scripts`).
+- **`tag`** — turn any image into a custom in-game Create-A-Graphic tag: encode
+  it into a CAGR sprite (`.img.xbx`), inject into `cagpieces.prx`, and build a
+  correctly-checksummed `.GRF` that loads directly. (Native Go port of the
+  reference Python tag importer; the `.GRF` it builds is byte-identical.)
 
 ```
 thugkit prx <roundtrip|list|extract|replace|replacez> ...
 thugkit apply <install-dir> [--mods <dir>] [--layer all|binary|source] [--only a,b]
+thugkit tag <image> --gamedir <dir> [--name X] [--slot grap_50] [--size 64|128|256] [--scale F] [--out dir] [--install]
 ```
 
 ## Build

@@ -133,6 +133,23 @@ func Find(entries []*Entry, name string) *Entry {
 	return nil
 }
 
+// FindBySuffix returns the first entry whose real name (before any NUL) ends
+// with suffix, case-insensitively with / normalised to \. Used for matching a
+// CAGR sprite slot like "grap_50.img.xbx" regardless of any path prefix.
+func FindBySuffix(entries []*Entry, suffix string) *Entry {
+	want := normName(suffix)
+	for _, e := range entries {
+		stored := e.Name
+		if i := bytes.IndexByte(stored, 0); i >= 0 {
+			stored = stored[:i]
+		}
+		if strings.HasSuffix(normName(string(stored)), want) {
+			return e
+		}
+	}
+	return nil
+}
+
 // ReplaceRaw stores newdata uncompressed (csize=0), 4-byte padded.
 func ReplaceRaw(e *Entry, newdata []byte) {
 	e.Dsize = uint32(len(newdata))
