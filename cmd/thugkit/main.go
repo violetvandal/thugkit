@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/violetvandal/thugkit/apply"
+	"github.com/violetvandal/thugkit/build"
 	"github.com/violetvandal/thugkit/prx"
 	"github.com/violetvandal/thugkit/tag"
 )
@@ -29,7 +30,7 @@ func readFile(path string) []byte {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: thugkit <prx|...> ...")
+		fmt.Fprintln(os.Stderr, "usage: thugkit <prx|apply|build|tag> ...")
 		os.Exit(2)
 	}
 	switch os.Args[1] {
@@ -37,6 +38,8 @@ func main() {
 		cmdPrx(os.Args[2:])
 	case "apply":
 		cmdApply(os.Args[2:])
+	case "build":
+		cmdBuild(os.Args[2:])
 	case "tag":
 		cmdTag(os.Args[2:])
 	default:
@@ -68,6 +71,57 @@ func cmdApply(args []string) {
 	}
 	o.Install = rest[0]
 	if err := apply.Run(o); err != nil {
+		die("%v", err)
+	}
+}
+
+// cmdBuild: thugkit build <dest> --pristine <dir> --mods <dir> [options]
+//
+//	[--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi]
+//	[--tags dir] [--soundtrack-qb file] [--only a,b]
+func cmdBuild(args []string) {
+	o := build.Options{ModsDir: "mods"}
+	var rest []string
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--pristine":
+			i++
+			o.PristineDir = args[i]
+		case "--mods":
+			i++
+			o.ModsDir = args[i]
+		case "--no-cd":
+			i++
+			o.NoCDExe = args[i]
+		case "--wsfix":
+			i++
+			o.WSFixZip = args[i]
+		case "--hq-audio":
+			i++
+			o.HQAudioDir = args[i]
+		case "--hudfix":
+			i++
+			o.HudFixASI = args[i]
+		case "--tags":
+			i++
+			o.TagsDir = args[i]
+		case "--soundtrack-qb":
+			i++
+			o.SoundtrackQB = args[i]
+		case "--only":
+			i++
+			o.Only = strings.Split(args[i], ",")
+		case "--fast":
+			o.Fast = true
+		default:
+			rest = append(rest, args[i])
+		}
+	}
+	if len(rest) != 1 || o.PristineDir == "" {
+		die("usage: thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--tags dir] [--soundtrack-qb file] [--only a,b]")
+	}
+	o.Dest = rest[0]
+	if err := build.Run(o); err != nil {
 		die("%v", err)
 	}
 }
