@@ -20,11 +20,20 @@ it cross-compiles cleanly to Windows, Linux, and Steam Deck.
   it into a CAGR sprite (`.img.xbx`), inject into `cagpieces.prx`, and build a
   correctly-checksummed `.GRF` that loads directly. (Native Go port of the
   reference Python tag importer; the `.GRF` it builds is byte-identical.)
+- **`build`** — produce a whole edition from a clean pristine base + the mod
+  sources: mirror the base, install the no-CD exe, apply the WidescreenFix (the
+  `dinput8.dll` → `winmm.dll` rename, via stdlib `archive/zip`), run `apply`,
+  install custom tags, copy the HUD-fix `.asi`, overlay an HQ A/V pack, and
+  optionally bake a default soundtrack (with the `qb_scripts` boot ceiling
+  enforced). This is the in-process, zero-dep core of the **Revert** installer's
+  build step — it never shells out, so archive extraction (ISO/MSI/7z) and the
+  optional Python asset steps stay in Revert's bash wrapper.
 
 ```
 thugkit prx <roundtrip|list|extract|replace|replacez> ...
 thugkit apply <install-dir> [--mods <dir>] [--layer all|binary|source] [--only a,b]
 thugkit tag <image> --gamedir <dir> [--name X] [--slot grap_50] [--size 64|128|256] [--scale F] [--out dir] [--install]
+thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--tags dir] [--soundtrack-qb f] [--only a,b]
 ```
 
 ## Build
