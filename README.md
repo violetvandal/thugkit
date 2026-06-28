@@ -33,7 +33,7 @@ it cross-compiles cleanly to Windows, Linux, and Steam Deck.
 thugkit prx <roundtrip|list|extract|replace|replacez> ...
 thugkit apply <install-dir> [--mods <dir>] [--layer all|binary|source] [--only a,b]
 thugkit tag <image> --gamedir <dir> [--name X] [--slot grap_50] [--size 64|128|256] [--scale F] [--out dir] [--install]
-thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--tags dir] [--soundtrack-qb f] [--only a,b]
+thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--glyphfix asi] [--tags dir] [--soundtrack-qb f] [--only a,b]
 ```
 
 ## Build

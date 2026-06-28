@@ -30,9 +30,10 @@ type Options struct {
 	WSFixZip   string // ThirteenAG WidescreenFix .zip ("" = skip)
 	HQAudioDir string // PRE-EXTRACTED HQ pack root containing Game/Data/... ("" = skip)
 
-	Only      []string // restrict apply to these mod names (iteration)
-	HudFixASI string   // prebuilt VV.HudFix.asi to copy into scripts/ ("" = skip)
-	TagsDir   string   // dir of .GRF (-> Save/) + images (-> tag.Run grap_50+) ("" = skip)
+	Only        []string // restrict apply to these mod names (iteration)
+	HudFixASI   string   // prebuilt VV.HudFix.asi to copy into scripts/ ("" = skip)
+	GlyphFixASI string   // prebuilt VV.GlyphFix.asi to copy into scripts/ ("" = skip)
+	TagsDir     string   // dir of .GRF (-> Save/) + images (-> tag.Run grap_50+) ("" = skip)
 
 	// SoundtrackQB, if set, bakes a skater_sfx.qb variant as the default soundtrack.
 	// Default "" leaves the soundtrack untouched (the launch lane swaps it), matching
@@ -112,6 +113,12 @@ func Run(o Options) error {
 		}
 	}
 
+	if o.GlyphFixASI != "" {
+		if err := installASI(o.GlyphFixASI, o.Dest, "VV.GlyphFix.asi", o.Logf); err != nil {
+			return fmt.Errorf("glyphfix: %w", err)
+		}
+	}
+
 	if !o.Fast && o.HQAudioDir != "" {
 		o.Logf("[build] HQ audio/video overlay")
 		if err := overlayHQAudio(o.HQAudioDir, o.Dest, o.Logf); err != nil {
@@ -175,13 +182,20 @@ func installTags(tagsDir, dest string, logf func(string, ...any)) error {
 }
 
 func installHudFix(asi, dest string, logf func(string, ...any)) error {
+	return installASI(asi, dest, "VV.HudFix.asi", logf)
+}
+
+// installASI copies a prebuilt .asi into the install's scripts/ dir (where the Ultimate ASI
+// Loader, our winmm.dll proxy, picks it up alongside the WidescreenFix). No-op if there's no
+// scripts/ dir (e.g. a vanilla build without widescreen has nothing to host it).
+func installASI(asi, dest, name string, logf func(string, ...any)) error {
 	scripts := filepath.Join(dest, "scripts")
 	if !dirExists(scripts) {
-		return nil // no WSFix scripts dir (e.g. vanilla without widescreen) -> nothing to host it
+		return nil
 	}
-	if err := copyFile(asi, filepath.Join(scripts, "VV.HudFix.asi")); err != nil {
+	if err := copyFile(asi, filepath.Join(scripts, name)); err != nil {
 		return err
 	}
-	logf("  installed VV.HudFix.asi -> scripts/")
+	logf("  installed %s -> scripts/", name)
 	return nil
 }
