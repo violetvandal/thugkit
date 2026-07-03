@@ -98,6 +98,14 @@ func applyOne(o *Options, data, mod string) error {
 		return nil
 	}
 
+	// Optional mods carry bring-your-own payloads (HQ level textures, licensed
+	// packs). When the payload isn't present, skip cleanly instead of failing the
+	// build — fetch it via `revert acquire-hq` (or drop the files in) then rebuild.
+	if conf["optional"] == "true" && !modPayloadPresent(dir, typ) {
+		o.Logf("[mods] skip %s (optional; bring-your-own payload not present)", mod)
+		return nil
+	}
+
 	switch typ {
 	case "prx-overlay", "overlay":
 		src := filepath.Join(dir, "Data")
@@ -271,6 +279,33 @@ func readLines(path string) ([]string, error) {
 func dirExists(p string) bool {
 	st, err := os.Stat(p)
 	return err == nil && st.IsDir()
+}
+
+func fileExists(p string) bool {
+	st, err := os.Stat(p)
+	return err == nil && !st.IsDir()
+}
+
+// modPayloadPresent reports whether an optional mod's bring-your-own payload is
+// on disk. Used to skip (rather than fail) optional mods that haven't been fetched.
+func modPayloadPresent(dir, typ string) bool {
+	switch typ {
+	case "prx-overlay", "overlay":
+		return dirExists(filepath.Join(dir, "Data"))
+	case "prx-inject":
+		complete := true
+		if err := forInjectList(dir, func(_, _, blob string) error {
+			if !fileExists(filepath.Join(dir, blob)) {
+				complete = false
+			}
+			return nil
+		}); err != nil {
+			return false // no/broken inject.list -> treat as not present
+		}
+		return complete
+	default:
+		return true // ns-inject and friends ship their sources in-repo
+	}
 }
 
 // copyTree copies src/. over dst (merge), like cp -a --no-preserve=mode.

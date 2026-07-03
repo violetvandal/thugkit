@@ -138,6 +138,60 @@ func TestApplyLayerFilter(t *testing.T) {
 	}
 }
 
+// TestApplyOptional: an optional prx-inject mod whose bring-your-own payload is
+// absent is skipped (not fatal); the same mod applies once the payload is present;
+// and a NON-optional mod with a missing payload still errors.
+func TestApplyOptional(t *testing.T) {
+	setup := func(t *testing.T, optional, withBlob bool) (install, mods string) {
+		root := t.TempDir()
+		install = filepath.Join(root, "install")
+		pre := filepath.Join(install, "Data", "pre")
+		if err := os.MkdirAll(pre, 0755); err != nil {
+			t.Fatal(err)
+		}
+		writePrx(t, filepath.Join(pre, "foo.prx"), "t.qb", []byte("ORIGINAL"))
+		mods = filepath.Join(root, "mods")
+		writeFile(t, filepath.Join(mods, "mods.list"), "hqmod\n")
+		conf := "type=prx-inject\nlayer=binary\n"
+		if optional {
+			conf += "optional=true\n"
+		}
+		writeFile(t, filepath.Join(mods, "src", "hqmod", "mod.conf"), conf)
+		writeFile(t, filepath.Join(mods, "src", "hqmod", "inject.list"), "foo.prx  t.qb  blob.bin\n")
+		if withBlob {
+			writeFile(t, filepath.Join(mods, "src", "hqmod", "blob.bin"), "HQ-PAYLOAD")
+		}
+		return install, mods
+	}
+
+	t.Run("optional+missing -> skipped, no error", func(t *testing.T) {
+		install, mods := setup(t, true, false)
+		if err := Run(Options{Install: install, ModsDir: mods, Layer: "all", Logf: func(string, ...any) {}}); err != nil {
+			t.Fatalf("optional mod with missing payload should not error, got: %v", err)
+		}
+		if got := entryData(t, filepath.Join(install, "Data", "pre", "foo.prx"), "t.qb"); !bytes.Equal(got, []byte("ORIGINAL")) {
+			t.Fatalf("skipped mod still modified the archive: %q", got)
+		}
+	})
+
+	t.Run("optional+present -> applied", func(t *testing.T) {
+		install, mods := setup(t, true, true)
+		if err := Run(Options{Install: install, ModsDir: mods, Layer: "all", Logf: func(string, ...any) {}}); err != nil {
+			t.Fatal(err)
+		}
+		if got := entryData(t, filepath.Join(install, "Data", "pre", "foo.prx"), "t.qb"); !bytes.Equal(got, []byte("HQ-PAYLOAD")) {
+			t.Fatalf("optional mod with payload not applied: %q", got)
+		}
+	})
+
+	t.Run("non-optional+missing -> errors", func(t *testing.T) {
+		install, mods := setup(t, false, false)
+		if err := Run(Options{Install: install, ModsDir: mods, Layer: "all", Logf: func(string, ...any) {}}); err == nil {
+			t.Fatal("non-optional mod with missing payload should error, got nil")
+		}
+	})
+}
+
 // TestApplyOverlay exercises the copyTree path: an overlay mod's Data/ tree is
 // merged over the install (new files created, existing ones overwritten).
 func TestApplyOverlay(t *testing.T) {
