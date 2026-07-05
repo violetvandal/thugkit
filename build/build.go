@@ -80,6 +80,15 @@ func Run(o Options) error {
 			if err := copyFile(o.NoCDExe, filepath.Join(o.Dest, "THUG2.exe")); err != nil {
 				return fmt.Errorf("no-CD exe: %w", err)
 			}
+		} else if src := filepath.Join(o.PristineDir, "THUG2.exe"); fileExists(src) {
+			// No no-CD exe supplied — keep pristine's THUG2.exe so the edition is
+			// launchable. copyRootFiles deliberately skips THUG2.exe (expecting the
+			// no-CD step to place it), so without this a fresh clone with no no-CD
+			// source would build an edition with NO game exe at all.
+			o.Logf("[build] keeping pristine THUG2.exe (no no-CD exe supplied)")
+			if err := copyFile(src, filepath.Join(o.Dest, "THUG2.exe")); err != nil {
+				return fmt.Errorf("copy pristine exe: %w", err)
+			}
 		}
 		if o.WSFixZip != "" {
 			o.Logf("[build] widescreen (WSFix winmm loader + scripts)")

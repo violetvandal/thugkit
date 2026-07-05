@@ -137,3 +137,26 @@ func TestRunRequiresInputs(t *testing.T) {
 		t.Fatal("expected error with no PristineDir/Dest")
 	}
 }
+
+// With no no-CD exe supplied, the build must keep pristine's THUG2.exe so the edition
+// is actually launchable (regression: a fresh clone with no game-modded-vanilla source
+// produced an edition with NO game exe -> Wine "ShellExecuteEx failed: File not found").
+func TestRunKeepsPristineExeWhenNoNoCD(t *testing.T) {
+	pristine := t.TempDir()
+	dest := t.TempDir()
+	mods := t.TempDir()
+	write(t, filepath.Join(pristine, "Data", "pre", "x.prx"), "prx")
+	write(t, filepath.Join(pristine, "THUG2.exe"), "MZ-pristine-exe")
+	write(t, filepath.Join(mods, "mods.list"), "") // no mods to apply
+
+	if err := Run(Options{PristineDir: pristine, Dest: dest, ModsDir: mods, Logf: quiet}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(filepath.Join(dest, "THUG2.exe"))
+	if err != nil {
+		t.Fatalf("edition has no THUG2.exe: %v", err)
+	}
+	if string(got) != "MZ-pristine-exe" {
+		t.Fatalf("THUG2.exe is not the pristine exe: %q", got)
+	}
+}
