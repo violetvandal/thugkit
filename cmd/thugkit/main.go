@@ -77,7 +77,7 @@ func cmdApply(args []string) {
 
 // cmdBuild: thugkit build <dest> --pristine <dir> --mods <dir> [options]
 //
-//	[--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--glyphfix asi]
+//	[--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--glyphfix asi] [--keyboardgrid asi]
 //	[--tags dir] [--soundtrack-qb file] [--only a,b]
 func cmdBuild(args []string) {
 	o := build.Options{ModsDir: "mods"}
@@ -105,6 +105,9 @@ func cmdBuild(args []string) {
 		case "--glyphfix":
 			i++
 			o.GlyphFixASI = args[i]
+		case "--keyboardgrid":
+			i++
+			o.KeyboardGridASI = args[i]
 		case "--tags":
 			i++
 			o.TagsDir = args[i]
@@ -121,7 +124,7 @@ func cmdBuild(args []string) {
 		}
 	}
 	if len(rest) != 1 || o.PristineDir == "" {
-		die("usage: thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--glyphfix asi] [--tags dir] [--soundtrack-qb file] [--only a,b]")
+		die("usage: thugkit build <dest> --pristine <dir> [--mods dir] [--fast] [--no-cd exe] [--wsfix zip] [--hq-audio dir] [--hudfix asi] [--glyphfix asi] [--keyboardgrid asi] [--tags dir] [--soundtrack-qb file] [--only a,b]")
 	}
 	o.Dest = rest[0]
 	if err := build.Run(o); err != nil {

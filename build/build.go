@@ -33,6 +33,7 @@ type Options struct {
 	Only        []string // restrict apply to these mod names (iteration)
 	HudFixASI   string   // prebuilt VV.HudFix.asi to copy into scripts/ ("" = skip)
 	GlyphFixASI string   // prebuilt VV.GlyphFix.asi to copy into scripts/ ("" = skip)
+	KeyboardGridASI string // prebuilt VV.KeyboardGrid.asi (controller text entry) -> scripts/ ("" = skip)
 	TagsDir     string   // dir of .GRF (-> Save/) + images (-> tag.Run grap_50+) ("" = skip)
 
 	// SoundtrackQB, if set, bakes a skater_sfx.qb variant as the default soundtrack.
@@ -125,6 +126,12 @@ func Run(o Options) error {
 	if o.GlyphFixASI != "" {
 		if err := installASI(o.GlyphFixASI, o.Dest, "VV.GlyphFix.asi", o.Logf); err != nil {
 			return fmt.Errorf("glyphfix: %w", err)
+		}
+	}
+
+	if o.KeyboardGridASI != "" {
+		if err := installASI(o.KeyboardGridASI, o.Dest, "VV.KeyboardGrid.asi", o.Logf); err != nil {
+			return fmt.Errorf("keyboardgrid: %w", err)
 		}
 	}
 
